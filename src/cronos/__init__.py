@@ -1,1 +1,0 @@
-"""Cronos desktop clock package."""
