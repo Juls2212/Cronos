@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Callable
+import unicodedata
 
 try:
     from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
@@ -13,6 +14,8 @@ except ImportError:  # pragma: no cover - fallback for older Python environments
 
     class ZoneInfoNotFoundError(Exception):
         """Fallback exception when zoneinfo is unavailable."""
+
+from .theme_period_service import ThemePeriodService
 
 
 @dataclass(frozen=True, slots=True)
@@ -31,6 +34,7 @@ class WorldClockService:
         now_provider: Callable[[], datetime] | None = None,
     ) -> None:
         self._now_provider = now_provider or datetime.now
+        self._theme_period_service = ThemePeriodService()
         self._available_clock_definitions = self._build_available_clock_definitions()
         self._selected_clock_definitions: dict[str, WorldClockDefinition] = {}
 
@@ -46,19 +50,28 @@ class WorldClockService:
 
     def add_world_clock(self, city_name: str) -> bool:
         """Add a supported world clock if it is not already selected."""
-        selected_definition = self._available_clock_definitions.get(city_name)
-        if selected_definition is None or city_name in self._selected_clock_definitions:
+        normalized_city_name = self._normalize_city_name(city_name)
+        selected_definition = self._find_definition_by_city_name(normalized_city_name)
+        if selected_definition is None:
             return False
 
-        self._selected_clock_definitions[city_name] = selected_definition
+        if selected_definition.city_name in self._selected_clock_definitions:
+            return False
+
+        self._selected_clock_definitions[selected_definition.city_name] = selected_definition
         return True
 
     def remove_world_clock(self, city_name: str) -> bool:
         """Remove a previously selected world clock."""
-        if city_name not in self._selected_clock_definitions:
+        normalized_city_name = self._normalize_city_name(city_name)
+        selected_definition = self._find_definition_by_city_name(normalized_city_name)
+        if selected_definition is None:
             return False
 
-        del self._selected_clock_definitions[city_name]
+        if selected_definition.city_name not in self._selected_clock_definitions:
+            return False
+
+        del self._selected_clock_definitions[selected_definition.city_name]
         return True
 
     def get_world_clock_snapshots(self) -> list[dict[str, float | int | str]]:
@@ -78,6 +91,8 @@ class WorldClockService:
             second_value = zoned_time.second
             hour_in_12_format = hour_value % 12 or 12
             meridiem_label = "AM" if hour_value < 12 else "PM"
+            visual_period = self._theme_period_service.get_period_for_hour(hour_value)
+            theme_mode = self._theme_period_service.get_theme_mode_for_hour(hour_value)
 
             world_clock_snapshots.append(
                 {
@@ -86,6 +101,8 @@ class WorldClockService:
                     "hour": hour_value,
                     "minute": minute_value,
                     "second": second_value,
+                    "visual_period": visual_period,
+                    "theme_mode": theme_mode,
                     "formatted_24_hour_time": (
                         f"{hour_value:02d}:{minute_value:02d}:{second_value:02d}"
                     ),
@@ -103,12 +120,13 @@ class WorldClockService:
 
     def _build_available_clock_definitions(self) -> dict[str, WorldClockDefinition]:
         city_pairs = (
-            ("Bogot\u00e1", "America/Bogota"),
             ("Londres", "Europe/London"),
             ("Nueva York", "America/New_York"),
             ("Madrid", "Europe/Madrid"),
             ("Tokio", "Asia/Tokyo"),
             ("Par\u00eds", "Europe/Paris"),
+            ("Ciudad de M\u00e9xico", "America/Mexico_City"),
+            ("Buenos Aires", "America/Argentina/Buenos_Aires"),
         )
 
         available_clock_definitions: dict[str, WorldClockDefinition] = {}
@@ -120,12 +138,20 @@ class WorldClockService:
             except ZoneInfoNotFoundError:
                 continue
 
-            available_clock_definitions[city_name] = WorldClockDefinition(
+            available_clock_definitions[self._normalize_city_name(city_name)] = WorldClockDefinition(
                 city_name=city_name,
                 time_zone_name=time_zone_name,
             )
 
         return available_clock_definitions
+
+    def _find_definition_by_city_name(self, city_name: str) -> WorldClockDefinition | None:
+        return self._available_clock_definitions.get(self._normalize_city_name(city_name))
+
+    def _normalize_city_name(self, city_name: str) -> str:
+        compact_city_name = " ".join(city_name.split())
+        normalized_city_name = unicodedata.normalize("NFC", compact_city_name)
+        return normalized_city_name.casefold()
 
     def _resolve_current_time(self) -> datetime:
         current_time = self._now_provider()
