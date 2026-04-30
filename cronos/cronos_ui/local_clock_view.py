@@ -14,17 +14,35 @@ from .world_clocks_panel import WorldClocksPanel
 
 
 class LocalClockView(tk.Frame):
-    """Display the real local clock with background and world clocks."""
+    """Display the real local clock with a cleaner responsive layout."""
 
     def __init__(self, master: tk.Misc) -> None:
-        super().__init__(master, bg="#dbeafe")
+        super().__init__(master, bg="#e9f4ff")
         self._local_time_clock_service = LocalTimeClockService()
         self._theme_period_service = ThemePeriodService()
         self._world_clock_service = WorldClockService()
         self._use_24_hour_format = tk.BooleanVar(value=True)
         self._scheduled_refresh_identifier: str | None = None
+        self._current_local_period: str | None = None
+        self._current_local_theme_mode: str | None = None
+        self._format_12_button: tk.Button | None = None
+        self._format_24_button: tk.Button | None = None
+        self._app_title_label: tk.Label | None = None
+        self._screen_title_label: tk.Label | None = None
+        self._subtitle_label: tk.Label | None = None
+        self._digital_time_label: tk.Label | None = None
+        self._hero_shell: tk.Frame | None = None
+        self._hero_panel: tk.Frame | None = None
+        self._stage_shell: tk.Frame | None = None
+        self._stage_body: tk.Frame | None = None
+        self._top_band_frame: tk.Frame | None = None
+        self._branding_frame: tk.Frame | None = None
+        self._information_strip: tk.Frame | None = None
+        self._text_block: tk.Frame | None = None
+        self._format_segment_shell: tk.Frame | None = None
+        self._format_segment_frame: tk.Frame | None = None
 
-        for default_city_name in ("Bogot\u00e1", "Londres", "Tokio"):
+        for default_city_name in ("Londres", "Tokio", "Nueva York"):
             self._world_clock_service.add_world_clock(default_city_name)
 
         self._build_layout()
@@ -38,103 +56,174 @@ class LocalClockView(tk.Frame):
         super().destroy()
 
     def _build_layout(self) -> None:
-        self._background_canvas = SkyBackgroundCanvas(self, bg="#dbeafe")
+        self._background_canvas = SkyBackgroundCanvas(self, bg="#e9f4ff")
         self._background_canvas.place(relx=0, rely=0, relwidth=1, relheight=1)
 
-        main_content_frame = tk.Frame(self, bg="#dbeafe")
-        main_content_frame.pack(fill="both", expand=True, padx=24, pady=24)
-        main_content_frame.columnconfigure(0, weight=3)
-        main_content_frame.columnconfigure(1, weight=1)
-        main_content_frame.rowconfigure(0, weight=1)
+        interface_frame = tk.Frame(self, bg="#e9f4ff")
+        interface_frame.pack(fill="both", expand=True, padx=28, pady=28)
+        interface_frame.columnconfigure(0, weight=8)
+        interface_frame.columnconfigure(1, weight=3)
+        interface_frame.rowconfigure(0, weight=1)
 
-        local_clock_panel = tk.Frame(main_content_frame, bg="#dbeafe")
-        local_clock_panel.grid(row=0, column=0, sticky="nsew", padx=(0, 18))
+        self._hero_shell = tk.Frame(interface_frame, bg="#bfd8ee", padx=2, pady=2)
+        self._hero_shell.grid(row=0, column=0, sticky="nsew", padx=(0, 18))
 
-        title_label = tk.Label(
-            local_clock_panel,
+        self._hero_panel = tk.Frame(self._hero_shell, bg="#fffdf8")
+        self._hero_panel.pack(fill="both", expand=True)
+        self._hero_panel.columnconfigure(0, weight=1)
+        self._hero_panel.rowconfigure(2, weight=1)
+
+        self._top_band_frame = tk.Frame(self._hero_panel, bg="#fffdf8")
+        self._top_band_frame.grid(row=0, column=0, sticky="ew", padx=30, pady=(22, 0))
+        self._top_band_frame.columnconfigure(0, weight=1)
+        self._top_band_frame.columnconfigure(1, weight=0)
+
+        self._branding_frame = tk.Frame(self._top_band_frame, bg="#fffdf8")
+        self._branding_frame.grid(row=0, column=0, sticky="w")
+
+        self._app_title_label = tk.Label(
+            self._branding_frame,
+            text="Cronos",
+            font=("Georgia", 28, "bold"),
+            fg="#155e75",
+            bg="#fffdf8",
+        )
+        self._app_title_label.pack(anchor="w")
+
+        self._screen_title_label = tk.Label(
+            self._branding_frame,
             text="Reloj local",
-            font=("Helvetica", 26, "bold"),
-            fg="#0f172a",
-            bg="#dbeafe",
+            font=("Helvetica", 15, "bold"),
+            fg="#b45309",
+            bg="#fffdf8",
         )
-        title_label.pack(anchor="w")
+        self._screen_title_label.pack(anchor="w", pady=(2, 0))
 
-        subtitle_label = tk.Label(
-            local_clock_panel,
+        self._build_format_segment(self._top_band_frame)
+
+        self._information_strip = tk.Frame(self._hero_panel, bg="#fffdf8")
+        self._information_strip.grid(row=1, column=0, sticky="ew", padx=30, pady=(18, 10))
+        self._information_strip.columnconfigure(0, weight=1)
+
+        self._text_block = tk.Frame(self._information_strip, bg="#fffdf8")
+        self._text_block.grid(row=0, column=0, sticky="w")
+
+        self._subtitle_label = tk.Label(
+            self._text_block,
             text="Hora local",
-            font=("Helvetica", 16, "bold"),
-            fg="#1e3a8a",
-            bg="#dbeafe",
+            font=("Helvetica", 14, "bold"),
+            fg="#ca8a04",
+            bg="#fffdf8",
         )
-        subtitle_label.pack(anchor="w", pady=(6, 12))
-
-        top_information_frame = tk.Frame(local_clock_panel, bg="#dbeafe")
-        top_information_frame.pack(fill="x", pady=(0, 14))
+        self._subtitle_label.pack(anchor="w")
 
         self._digital_time_label = tk.Label(
-            top_information_frame,
+            self._text_block,
             text="00:00:00",
-            font=("Helvetica", 22, "bold"),
-            fg="#0f172a",
-            bg="#dbeafe",
+            font=("Helvetica", 28, "bold"),
+            fg="#164e63",
+            bg="#fffdf8",
         )
-        self._digital_time_label.pack(side="left")
+        self._digital_time_label.pack(anchor="w", pady=(4, 0))
 
-        format_toggle_frame = tk.Frame(top_information_frame, bg="#dbeafe")
-        format_toggle_frame.pack(side="right")
+        stage_frame = tk.Frame(self._hero_panel, bg="#fffdf8")
+        stage_frame.grid(row=2, column=0, sticky="nsew", padx=18, pady=(4, 22))
+        stage_frame.columnconfigure(0, weight=1)
+        stage_frame.rowconfigure(0, weight=1)
 
-        format_24_button = tk.Radiobutton(
-            format_toggle_frame,
-            text="Formato 24 horas",
-            value=True,
-            variable=self._use_24_hour_format,
-            command=self._refresh_digital_format_only,
-            font=("Helvetica", 11, "bold"),
-            fg="#0f172a",
-            bg="#dbeafe",
-            selectcolor="#bfdbfe",
-            activebackground="#dbeafe",
-        )
-        format_24_button.pack(anchor="e")
+        self._stage_shell = tk.Frame(stage_frame, bg="#d7b98b", padx=2, pady=2)
+        self._stage_shell.grid(row=0, column=0, sticky="nsew", padx=8, pady=8)
 
-        format_12_button = tk.Radiobutton(
-            format_toggle_frame,
-            text="Formato 12 horas",
-            value=False,
-            variable=self._use_24_hour_format,
-            command=self._refresh_digital_format_only,
-            font=("Helvetica", 11, "bold"),
-            fg="#0f172a",
-            bg="#dbeafe",
-            selectcolor="#bfdbfe",
-            activebackground="#dbeafe",
-        )
-        format_12_button.pack(anchor="e")
+        self._stage_body = tk.Frame(self._stage_shell, bg="#f8f1e3")
+        self._stage_body.pack(fill="both", expand=True)
 
         self._analog_clock_canvas = AnalogClockCanvas(
-            local_clock_panel,
-            width=560,
-            height=560,
-            face_fill_color="#f8fafc",
-            border_color="#0f172a",
-            numeral_color="#0f172a",
-            hand_color="#0f172a",
-            minute_hand_color="#1d4ed8",
-            second_hand_color="#dc2626",
-            background_color="#dbeafe",
+            self._stage_body,
+            width=620,
+            height=620,
+            show_numerals=True,
         )
-        self._analog_clock_canvas.pack(expand=True, fill="both")
+        self._analog_clock_canvas.pack(expand=True, fill="both", padx=24, pady=24)
 
         self._world_clocks_panel = WorldClocksPanel(
-            main_content_frame,
+            interface_frame,
             world_clock_service=self._world_clock_service,
+            theme_period_service=self._theme_period_service,
         )
         self._world_clocks_panel.grid(row=0, column=1, sticky="nsew")
 
+        self._refresh_format_segment()
+
+    def _build_format_segment(self, master: tk.Misc) -> None:
+        self._format_segment_shell = tk.Frame(master, bg="#dbeafe", padx=2, pady=2)
+        self._format_segment_shell.grid(row=0, column=1, sticky="e")
+
+        self._format_segment_frame = tk.Frame(self._format_segment_shell, bg="#f8fafc")
+        self._format_segment_frame.pack()
+
+        self._format_24_button = tk.Button(
+            self._format_segment_frame,
+            text="Formato 24 horas",
+            command=lambda: self._set_time_format(True),
+            font=("Helvetica", 10, "bold"),
+            relief=tk.FLAT,
+            bd=0,
+            padx=16,
+            pady=10,
+            cursor="hand2",
+        )
+        self._format_24_button.pack(side="left")
+
+        self._format_12_button = tk.Button(
+            self._format_segment_frame,
+            text="Formato 12 horas",
+            command=lambda: self._set_time_format(False),
+            font=("Helvetica", 10, "bold"),
+            relief=tk.FLAT,
+            bd=0,
+            padx=16,
+            pady=10,
+            cursor="hand2",
+        )
+        self._format_12_button.pack(side="left")
+
     def _refresh_display(self) -> None:
         current_snapshot = self._local_time_clock_service.refresh_from_system_time()
-        current_period = self._theme_period_service.get_period_for_hour(int(current_snapshot["hour"]))
-        self._background_canvas.set_period(current_period)
+        current_hour = int(current_snapshot["hour"])
+        current_period = self._theme_period_service.get_period_for_hour(current_hour)
+        current_theme_mode = self._theme_period_service.get_theme_mode_for_hour(current_hour)
+        local_palette = self._theme_period_service.get_local_view_palette(current_hour)
+
+        if self._current_local_period != current_period:
+            self._background_canvas.set_period(current_period)
+            self._current_local_period = current_period
+
+        if self._current_local_theme_mode != current_theme_mode:
+            self._apply_local_palette(local_palette)
+            self._analog_clock_canvas.configure_visual_theme(
+                {
+                    "background": local_palette["clock_background"],
+                    "outer_shadow": local_palette["hero_shell"],
+                    "glow": local_palette["clock_glow"],
+                    "frame": local_palette["clock_border"],
+                    "face": local_palette["clock_face"],
+                    "inner_ring": local_palette["hero_stage"],
+                    "numeral": local_palette["clock_numeral"],
+                    "major_tick": local_palette["clock_border"],
+                    "minor_tick": local_palette["window_background"],
+                    "hour_hand": local_palette["clock_hour_hand"],
+                    "minute_hand": local_palette["clock_minute_hand"],
+                    "second_hand": local_palette["clock_second_hand"],
+                    "center_outer": local_palette["clock_hour_hand"],
+                    "center_inner": local_palette["clock_glow"],
+                }
+            )
+            if self._world_clocks_panel.get_panel_theme_mode() != current_theme_mode:
+                self._world_clocks_panel.apply_panel_palette(local_palette)
+                self._world_clocks_panel.set_panel_theme_mode(current_theme_mode)
+            self._refresh_format_segment(local_palette)
+            self._current_local_theme_mode = current_theme_mode
+
         self._analog_clock_canvas.update_clock_hands(
             hour_hand_angle=float(current_snapshot["hour_hand_angle"]),
             minute_hand_angle=float(current_snapshot["minute_hand_angle"]),
@@ -144,17 +233,97 @@ class LocalClockView(tk.Frame):
         current_time_label = self._local_time_clock_service.get_formatted_time(
             use_24_hour_format=self._use_24_hour_format.get()
         )
-        self._digital_time_label.configure(text=current_time_label)
-        self._world_clocks_panel.set_use_24_hour_format(self._use_24_hour_format.get())
+        if self._digital_time_label is not None:
+            self._digital_time_label.configure(text=current_time_label)
+
         self._world_clocks_panel.refresh_world_clocks()
 
         next_refresh_delay = self._local_time_clock_service.get_milliseconds_until_next_second()
         self._scheduled_refresh_identifier = self.after(next_refresh_delay, self._refresh_display)
 
+    def _apply_local_palette(self, palette: dict[str, str]) -> None:
+        self.configure(bg=palette["window_background"])
+        self._background_canvas.configure(bg=palette["window_background"])
+        if self._hero_shell is not None:
+            self._hero_shell.configure(bg=palette["hero_shell"])
+        if self._hero_panel is not None:
+            self._hero_panel.configure(bg=palette["hero_panel"])
+        if self._top_band_frame is not None:
+            self._top_band_frame.configure(bg=palette["hero_panel"])
+        if self._branding_frame is not None:
+            self._branding_frame.configure(bg=palette["hero_panel"])
+        if self._information_strip is not None:
+            self._information_strip.configure(bg=palette["hero_panel"])
+        if self._text_block is not None:
+            self._text_block.configure(bg=palette["hero_panel"])
+        if self._stage_shell is not None:
+            self._stage_shell.configure(bg=palette["hero_shell"])
+        if self._stage_body is not None:
+            self._stage_body.configure(bg=palette["hero_stage"])
+        if self._format_segment_shell is not None:
+            self._format_segment_shell.configure(bg=palette["toggle_shell"])
+        if self._format_segment_frame is not None:
+            self._format_segment_frame.configure(bg=palette["toggle_panel"])
+        if self._app_title_label is not None:
+            self._app_title_label.configure(bg=palette["hero_panel"], fg=palette["title"])
+        if self._screen_title_label is not None:
+            self._screen_title_label.configure(bg=palette["hero_panel"], fg=palette["subtitle"])
+        if self._subtitle_label is not None:
+            self._subtitle_label.configure(bg=palette["hero_panel"], fg=palette["subtitle"])
+        if self._digital_time_label is not None:
+            self._digital_time_label.configure(bg=palette["hero_panel"], fg=palette["digital_time"])
+
+    def _set_time_format(self, use_24_hour_format: bool) -> None:
+        self._use_24_hour_format.set(use_24_hour_format)
+        self._refresh_digital_format_only()
+
     def _refresh_digital_format_only(self) -> None:
         current_time_label = self._local_time_clock_service.get_formatted_time(
             use_24_hour_format=self._use_24_hour_format.get()
         )
-        self._digital_time_label.configure(text=current_time_label)
-        if hasattr(self, "_world_clocks_panel"):
-            self._world_clocks_panel.set_use_24_hour_format(self._use_24_hour_format.get())
+        if self._digital_time_label is not None:
+            self._digital_time_label.configure(text=current_time_label)
+        self._world_clocks_panel.set_use_24_hour_format(self._use_24_hour_format.get())
+        current_hour = int(
+            self._local_time_clock_service.get_current_local_time_snapshot()["hour"]
+        )
+        local_palette = self._theme_period_service.get_local_view_palette(current_hour)
+        self._refresh_format_segment(local_palette)
+        self._world_clocks_panel.refresh_world_clocks()
+
+    def _refresh_format_segment(self, local_palette: dict[str, str] | None = None) -> None:
+        if self._format_24_button is None or self._format_12_button is None:
+            return
+
+        if local_palette is None:
+            current_hour = int(
+                self._local_time_clock_service.get_current_local_time_snapshot()["hour"]
+            )
+            local_palette = self._theme_period_service.get_local_view_palette(current_hour)
+
+        if self._use_24_hour_format.get():
+            self._format_24_button.configure(
+                bg=local_palette["toggle_active_fill"],
+                fg=local_palette["toggle_active_text"],
+                activebackground=local_palette["toggle_active_fill"],
+                activeforeground=local_palette["toggle_active_text"],
+            )
+            self._format_12_button.configure(
+                bg=local_palette["toggle_panel"],
+                fg=local_palette["toggle_inactive_text"],
+                activebackground=local_palette["toggle_panel"],
+                activeforeground=local_palette["toggle_inactive_text"],
+            )
+        else:
+            self._format_12_button.configure(
+                bg=local_palette["toggle_active_fill"],
+                fg=local_palette["toggle_active_text"],
+                activebackground=local_palette["toggle_active_fill"],
+                activeforeground=local_palette["toggle_active_text"],
+            )
+            self._format_24_button.configure(
+                bg=local_palette["toggle_panel"],
+                fg=local_palette["toggle_inactive_text"],
+                activebackground=local_palette["toggle_panel"],
+                activeforeground=local_palette["toggle_inactive_text"],
+            )
