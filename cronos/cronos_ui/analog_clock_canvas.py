@@ -35,9 +35,13 @@ class AnalogClockCanvas(tk.Canvas):
             "frame": "#d4a373",
             "face": "#fffdf7",
             "inner_ring": "#f2e8d5",
+            "day_face": "#fff6e2",
+            "night_face": "#dfeaf6",
             "numeral": "#7c3f00",
             "major_tick": "#b45309",
             "minor_tick": "#cbd5e1",
+            "ring_primary": "#d9a857",
+            "ring_secondary": "#9eb9d0",
             "hour_hand": "#9a3412",
             "minute_hand": "#2563eb",
             "second_hand": "#ef4444",
@@ -128,6 +132,14 @@ class AnalogClockCanvas(tk.Canvas):
             outline="",
         )
         self.create_oval(
+            center_x - radius + inner_face_inset * 0.28,
+            center_y - radius + inner_face_inset * 0.28,
+            center_x + radius - inner_face_inset * 0.28,
+            center_y + radius - inner_face_inset * 0.28,
+            outline=self._palette["ring_primary"],
+            width=2,
+        )
+        self.create_oval(
             center_x - radius + inner_face_inset,
             center_y - radius + inner_face_inset,
             center_x + radius - inner_face_inset,
@@ -135,6 +147,11 @@ class AnalogClockCanvas(tk.Canvas):
             fill=self._palette["face"],
             outline=self._palette["inner_ring"],
             width=3,
+        )
+        self._draw_duality_face(
+            center_x=center_x,
+            center_y=center_y,
+            radius=radius - inner_face_inset - 6,
         )
 
         self._draw_ticks(center_x=center_x, center_y=center_y, radius=radius)
@@ -172,6 +189,118 @@ class AnalogClockCanvas(tk.Canvas):
             center_y + 4,
             fill=self._palette["center_inner"],
             outline="",
+        )
+
+    def _draw_duality_face(self, center_x: float, center_y: float, radius: float) -> None:
+        self.create_arc(
+            center_x - radius,
+            center_y - radius,
+            center_x + radius,
+            center_y + radius,
+            start=90,
+            extent=180,
+            fill=self._palette["day_face"],
+            outline="",
+        )
+        self.create_arc(
+            center_x - radius,
+            center_y - radius,
+            center_x + radius,
+            center_y + radius,
+            start=270,
+            extent=180,
+            fill=self._palette["night_face"],
+            outline="",
+        )
+
+        flow_radius = radius * 0.50
+        flow_offset = radius * 0.25
+        small_orb_radius = max(radius * 0.10, 10)
+        sun_center_x = center_x
+        sun_center_y = center_y - flow_offset
+        moon_center_x = center_x
+        moon_center_y = center_y + flow_offset
+
+        self.create_oval(
+            center_x - flow_radius,
+            center_y - radius * 0.88,
+            center_x + flow_radius,
+            center_y + radius * 0.12,
+            fill=self._palette["day_face"],
+            outline="",
+        )
+        self.create_oval(
+            center_x - flow_radius,
+            center_y - radius * 0.12,
+            center_x + flow_radius,
+            center_y + radius * 0.88,
+            fill=self._palette["night_face"],
+            outline="",
+        )
+        self.create_arc(
+            center_x - radius,
+            center_y - radius,
+            center_x + radius,
+            center_y + radius,
+            start=90,
+            extent=180,
+            style=tk.ARC,
+            outline=self._palette["ring_primary"],
+            width=2,
+        )
+        self.create_arc(
+            center_x - radius,
+            center_y - radius,
+            center_x + radius,
+            center_y + radius,
+            start=270,
+            extent=180,
+            style=tk.ARC,
+            outline=self._palette["ring_secondary"],
+            width=2,
+        )
+        self.create_oval(
+            sun_center_x - small_orb_radius,
+            sun_center_y - small_orb_radius,
+            sun_center_x + small_orb_radius,
+            sun_center_y + small_orb_radius,
+            fill=self._palette["night_face"],
+            outline="",
+        )
+        self.create_oval(
+            moon_center_x - small_orb_radius,
+            moon_center_y - small_orb_radius,
+            moon_center_x + small_orb_radius,
+            moon_center_y + small_orb_radius,
+            fill=self._palette["day_face"],
+            outline="",
+        )
+        self.create_arc(
+            moon_center_x - small_orb_radius * 0.9,
+            moon_center_y - small_orb_radius * 0.9,
+            moon_center_x + small_orb_radius * 0.9,
+            moon_center_y + small_orb_radius * 0.9,
+            start=300,
+            extent=150,
+            style=tk.ARC,
+            outline=self._palette["ring_primary"],
+            width=2,
+        )
+        self.create_oval(
+            sun_center_x - small_orb_radius * 0.36,
+            sun_center_y - small_orb_radius * 0.36,
+            sun_center_x + small_orb_radius * 0.36,
+            sun_center_y + small_orb_radius * 0.36,
+            fill=self._palette["ring_primary"],
+            outline="",
+        )
+        self.create_oval(
+            center_x - radius * 0.92,
+            center_y - radius * 0.92,
+            center_x + radius * 0.92,
+            center_y + radius * 0.92,
+            outline=self._palette["ring_secondary"],
+            width=1,
         )
 
     def _draw_ticks(self, center_x: float, center_y: float, radius: float) -> None:

@@ -30,30 +30,35 @@ class SkyBackgroundCanvas(tk.Canvas):
 
         if self._current_period_name in {"dawn", "day"}:
             palette = {
-                "sky": ("#fff8ec", "#fbe7c7", "#dcefff", "#b8ddf8"),
-                "orb": "#fde68a",
-                "orb_glow": "#fef3c7",
-                "curve": "#f6c998",
-                "curve_secondary": "#9cc7ef",
-                "ridge": "#d8c29b",
-                "base": "#f4efe3",
-                "cloud": "#fffdf8",
+                "sky": ("#f8efe1", "#f5dfbf", "#dbeaf5", "#bcd5e8"),
+                "orb": "#edc96d",
+                "orb_glow": "#f7e6be",
+                "curve": "#e3ba79",
+                "curve_secondary": "#95b8d1",
+                "ridge": "#d7c3a7",
+                "base": "#f6efe6",
+                "cloud": "#fffaf4",
+                "star": "#ffffff",
             }
         else:
             palette = {
-                "sky": ("#091326", "#13233d", "#1d3557", "#304b77"),
-                "orb": "#f8fafc",
-                "orb_glow": "#dbeafe",
-                "curve": "#4c6fa7",
-                "curve_secondary": "#8d7cc8",
-                "ridge": "#111c31",
-                "base": "#162541",
-                "cloud": "#243655",
+                "sky": ("#081221", "#132137", "#1f3350", "#30456a"),
+                "orb": "#eef3fd",
+                "orb_glow": "#7b8fbd",
+                "curve": "#5f76a9",
+                "curve_secondary": "#9289bc",
+                "ridge": "#111d30",
+                "base": "#16253e",
+                "cloud": "#23324e",
+                "star": "#f7f2ff",
             }
 
         self._draw_vertical_gradient(canvas_width, canvas_height, palette["sky"])
+        self._draw_duality_wash(canvas_width, canvas_height, palette["curve"], palette["curve_secondary"])
         self._draw_soft_orb(canvas_width, canvas_height, palette["orb_glow"], palette["orb"])
         self._draw_curves(canvas_width, canvas_height, palette["curve"], palette["curve_secondary"])
+        if self._current_period_name in {"evening", "night"}:
+            self._draw_stars(canvas_width, canvas_height, palette["star"])
         self._draw_clouds(canvas_width, canvas_height, palette["cloud"])
         self._draw_horizon(canvas_width, canvas_height, palette["ridge"], palette["base"])
 
@@ -76,24 +81,50 @@ class SkyBackgroundCanvas(tk.Canvas):
         glow_color: str,
         orb_color: str,
     ) -> None:
-        center_x = int(width * 0.18)
-        center_y = int(height * 0.16)
+        center_x = int(width * 0.16)
+        center_y = int(height * 0.18)
         self.create_oval(
-            center_x - 78,
-            center_y - 78,
-            center_x + 78,
-            center_y + 78,
+            center_x - 92,
+            center_y - 92,
+            center_x + 92,
+            center_y + 92,
             fill=glow_color,
             outline="",
             stipple="gray50",
         )
         self.create_oval(
-            center_x - 48,
-            center_y - 48,
-            center_x + 48,
-            center_y + 48,
+            center_x - 52,
+            center_y - 52,
+            center_x + 52,
+            center_y + 52,
             fill=orb_color,
             outline="",
+        )
+
+    def _draw_duality_wash(
+        self,
+        width: int,
+        height: int,
+        primary_color: str,
+        secondary_color: str,
+    ) -> None:
+        self.create_oval(
+            -width * 0.10,
+            -height * 0.18,
+            width * 0.52,
+            height * 0.52,
+            fill=primary_color,
+            outline="",
+            stipple="gray50",
+        )
+        self.create_oval(
+            width * 0.38,
+            -height * 0.10,
+            width * 1.05,
+            height * 0.62,
+            fill=secondary_color,
+            outline="",
+            stipple="gray50",
         )
 
     def _draw_curves(
@@ -104,32 +135,63 @@ class SkyBackgroundCanvas(tk.Canvas):
         secondary_color: str,
     ) -> None:
         self.create_arc(
-            -width * 0.10,
-            -height * 0.05,
-            width * 0.72,
-            height * 0.68,
+            -width * 0.08,
+            -height * 0.08,
+            width * 0.82,
+            height * 0.78,
             start=270,
-            extent=110,
+            extent=118,
             style=tk.ARC,
             outline=primary_color,
             width=2,
         )
         self.create_arc(
-            width * 0.28,
-            -height * 0.10,
-            width * 1.05,
-            height * 0.58,
-            start=110,
-            extent=112,
+            width * 0.20,
+            -height * 0.16,
+            width * 1.04,
+            height * 0.66,
+            start=102,
+            extent=126,
             style=tk.ARC,
             outline=secondary_color,
             width=2,
         )
+        self.create_arc(
+            width * 0.06,
+            -height * 0.02,
+            width * 0.94,
+            height * 0.92,
+            start=250,
+            extent=60,
+            style=tk.ARC,
+            outline=secondary_color,
+            width=1,
+        )
+
+    def _draw_stars(self, width: int, height: int, star_color: str) -> None:
+        for horizontal_ratio, vertical_ratio, radius in (
+            (0.22, 0.13, 2),
+            (0.33, 0.24, 1),
+            (0.52, 0.11, 2),
+            (0.66, 0.20, 1),
+            (0.79, 0.14, 2),
+            (0.88, 0.27, 1),
+        ):
+            center_x = int(width * horizontal_ratio)
+            center_y = int(height * vertical_ratio)
+            self.create_oval(
+                center_x - radius,
+                center_y - radius,
+                center_x + radius,
+                center_y + radius,
+                fill=star_color,
+                outline="",
+            )
 
     def _draw_clouds(self, width: int, height: int, cloud_color: str) -> None:
-        self._draw_cloud(int(width * 0.12), int(height * 0.20), cloud_color, 1.0)
-        self._draw_cloud(int(width * 0.40), int(height * 0.28), cloud_color, 1.2)
-        self._draw_cloud(int(width * 0.72), int(height * 0.18), cloud_color, 0.9)
+        self._draw_cloud(int(width * 0.10), int(height * 0.22), cloud_color, 0.95)
+        self._draw_cloud(int(width * 0.44), int(height * 0.30), cloud_color, 1.05)
+        self._draw_cloud(int(width * 0.76), int(height * 0.18), cloud_color, 0.82)
 
     def _draw_cloud(self, left_position: int, top_position: int, cloud_color: str, scale_value: float) -> None:
         self.create_oval(
@@ -158,7 +220,7 @@ class SkyBackgroundCanvas(tk.Canvas):
         )
 
     def _draw_horizon(self, width: int, height: int, ridge_color: str, base_color: str) -> None:
-        horizon_y = int(height * 0.74)
+        horizon_y = int(height * 0.76)
         self.create_polygon(
             0,
             horizon_y + 24,

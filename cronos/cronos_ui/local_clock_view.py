@@ -60,13 +60,13 @@ class LocalClockView(tk.Frame):
         self._background_canvas.place(relx=0, rely=0, relwidth=1, relheight=1)
 
         interface_frame = tk.Frame(self, bg="#e9f4ff")
-        interface_frame.pack(fill="both", expand=True, padx=28, pady=28)
+        interface_frame.pack(fill="both", expand=True, padx=34, pady=32)
         interface_frame.columnconfigure(0, weight=8)
         interface_frame.columnconfigure(1, weight=3)
         interface_frame.rowconfigure(0, weight=1)
 
-        self._hero_shell = tk.Frame(interface_frame, bg="#bfd8ee", padx=2, pady=2)
-        self._hero_shell.grid(row=0, column=0, sticky="nsew", padx=(0, 18))
+        self._hero_shell = tk.Frame(interface_frame, bg="#bfd8ee", padx=1, pady=1)
+        self._hero_shell.grid(row=0, column=0, sticky="nsew", padx=(0, 22))
 
         self._hero_panel = tk.Frame(self._hero_shell, bg="#fffdf8")
         self._hero_panel.pack(fill="both", expand=True)
@@ -74,7 +74,7 @@ class LocalClockView(tk.Frame):
         self._hero_panel.rowconfigure(2, weight=1)
 
         self._top_band_frame = tk.Frame(self._hero_panel, bg="#fffdf8")
-        self._top_band_frame.grid(row=0, column=0, sticky="ew", padx=30, pady=(22, 0))
+        self._top_band_frame.grid(row=0, column=0, sticky="ew", padx=40, pady=(28, 0))
         self._top_band_frame.columnconfigure(0, weight=1)
         self._top_band_frame.columnconfigure(1, weight=0)
 
@@ -84,7 +84,7 @@ class LocalClockView(tk.Frame):
         self._app_title_label = tk.Label(
             self._branding_frame,
             text="Cronos",
-            font=("Georgia", 28, "bold"),
+            font=("Georgia", 30, "bold"),
             fg="#155e75",
             bg="#fffdf8",
         )
@@ -93,16 +93,16 @@ class LocalClockView(tk.Frame):
         self._screen_title_label = tk.Label(
             self._branding_frame,
             text="Reloj local",
-            font=("Helvetica", 15, "bold"),
+            font=("Helvetica", 14, "bold"),
             fg="#b45309",
             bg="#fffdf8",
         )
-        self._screen_title_label.pack(anchor="w", pady=(2, 0))
+        self._screen_title_label.pack(anchor="w", pady=(4, 0))
 
         self._build_format_segment(self._top_band_frame)
 
         self._information_strip = tk.Frame(self._hero_panel, bg="#fffdf8")
-        self._information_strip.grid(row=1, column=0, sticky="ew", padx=30, pady=(18, 10))
+        self._information_strip.grid(row=1, column=0, sticky="ew", padx=40, pady=(22, 14))
         self._information_strip.columnconfigure(0, weight=1)
 
         self._text_block = tk.Frame(self._information_strip, bg="#fffdf8")
@@ -111,7 +111,7 @@ class LocalClockView(tk.Frame):
         self._subtitle_label = tk.Label(
             self._text_block,
             text="Hora local",
-            font=("Helvetica", 14, "bold"),
+            font=("Helvetica", 13, "bold"),
             fg="#ca8a04",
             bg="#fffdf8",
         )
@@ -120,19 +120,19 @@ class LocalClockView(tk.Frame):
         self._digital_time_label = tk.Label(
             self._text_block,
             text="00:00:00",
-            font=("Helvetica", 28, "bold"),
+            font=("Helvetica", 31, "bold"),
             fg="#164e63",
             bg="#fffdf8",
         )
-        self._digital_time_label.pack(anchor="w", pady=(4, 0))
+        self._digital_time_label.pack(anchor="w", pady=(6, 0))
 
         stage_frame = tk.Frame(self._hero_panel, bg="#fffdf8")
-        stage_frame.grid(row=2, column=0, sticky="nsew", padx=18, pady=(4, 22))
+        stage_frame.grid(row=2, column=0, sticky="nsew", padx=24, pady=(2, 26))
         stage_frame.columnconfigure(0, weight=1)
         stage_frame.rowconfigure(0, weight=1)
 
-        self._stage_shell = tk.Frame(stage_frame, bg="#d7b98b", padx=2, pady=2)
-        self._stage_shell.grid(row=0, column=0, sticky="nsew", padx=8, pady=8)
+        self._stage_shell = tk.Frame(stage_frame, bg="#d7b98b", padx=1, pady=1)
+        self._stage_shell.grid(row=0, column=0, sticky="nsew", padx=6, pady=6)
 
         self._stage_body = tk.Frame(self._stage_shell, bg="#f8f1e3")
         self._stage_body.pack(fill="both", expand=True)
@@ -143,7 +143,7 @@ class LocalClockView(tk.Frame):
             height=620,
             show_numerals=True,
         )
-        self._analog_clock_canvas.pack(expand=True, fill="both", padx=24, pady=24)
+        self._analog_clock_canvas.pack(expand=True, fill="both", padx=30, pady=30)
 
         self._world_clocks_panel = WorldClocksPanel(
             interface_frame,
@@ -208,12 +208,16 @@ class LocalClockView(tk.Frame):
                     "frame": local_palette["clock_border"],
                     "face": local_palette["clock_face"],
                     "inner_ring": local_palette["hero_stage"],
+                    "day_face": local_palette["clock_day_face"],
+                    "night_face": local_palette["clock_night_face"],
                     "numeral": local_palette["clock_numeral"],
-                    "major_tick": local_palette["clock_border"],
+                    "major_tick": local_palette["clock_ring_primary"],
                     "minor_tick": local_palette["window_background"],
                     "hour_hand": local_palette["clock_hour_hand"],
                     "minute_hand": local_palette["clock_minute_hand"],
                     "second_hand": local_palette["clock_second_hand"],
+                    "ring_primary": local_palette["clock_ring_primary"],
+                    "ring_secondary": local_palette["clock_ring_secondary"],
                     "center_outer": local_palette["clock_hour_hand"],
                     "center_inner": local_palette["clock_glow"],
                 }

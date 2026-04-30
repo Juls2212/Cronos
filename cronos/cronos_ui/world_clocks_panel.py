@@ -24,29 +24,39 @@ class WorldClockCard(tk.Frame):
         self._remove_action = remove_action
         self._city_name = city_name
         self._theme_mode: str | None = None
-        self._card_shell = tk.Frame(self, bg="#d3b58a", padx=2, pady=2)
+        self._card_shell = tk.Frame(self, bg="#d3b58a", padx=1, pady=1)
         self._card_shell.pack(fill="x")
 
         self._card_body = tk.Frame(self._card_shell, bg="#fff8ec")
         self._card_body.pack(fill="x")
+        self._card_body.columnconfigure(1, weight=1)
+
+        self._analog_clock_canvas = AnalogClockCanvas(
+            self._card_body,
+            width=96,
+            height=96,
+            show_numerals=False,
+        )
+        self._analog_clock_canvas.grid(row=0, column=0, rowspan=2, padx=(12, 10), pady=12)
 
         header_frame = tk.Frame(self._card_body, bg="#fff8ec")
-        header_frame.pack(fill="x", padx=14, pady=(12, 4))
+        header_frame.grid(row=0, column=1, sticky="ew", padx=(0, 12), pady=(12, 4))
+        header_frame.columnconfigure(0, weight=1)
 
         self._city_label = tk.Label(
             header_frame,
             text=city_name,
-            font=("Georgia", 13, "bold"),
+            font=("Georgia", 12, "bold"),
             fg="#92400e",
             bg="#fff8ec",
         )
-        self._city_label.pack(side="left")
+        self._city_label.grid(row=0, column=0, sticky="w")
 
         self._remove_button = tk.Button(
             header_frame,
             text="Eliminar",
             command=lambda: self._remove_action(city_name),
-            font=("Helvetica", 9, "bold"),
+            font=("Helvetica", 8, "bold"),
             fg="#fff7ed",
             bg="#c2410c",
             activeforeground="#ffffff",
@@ -54,27 +64,19 @@ class WorldClockCard(tk.Frame):
             relief=tk.FLAT,
             bd=0,
             padx=10,
-            pady=5,
+            pady=4,
             cursor="hand2",
         )
-        self._remove_button.pack(side="right")
-
-        self._analog_clock_canvas = AnalogClockCanvas(
-            self._card_body,
-            width=126,
-            height=126,
-            show_numerals=False,
-        )
-        self._analog_clock_canvas.pack(pady=(4, 4))
+        self._remove_button.grid(row=0, column=1, sticky="e")
 
         self._time_label = tk.Label(
             self._card_body,
             text="--:--:--",
-            font=("Helvetica", 12, "bold"),
+            font=("Helvetica", 13, "bold"),
             fg="#78350f",
             bg="#fff8ec",
         )
-        self._time_label.pack(pady=(0, 14))
+        self._time_label.grid(row=1, column=1, sticky="w", padx=(0, 12), pady=(0, 12))
 
     def apply_palette(self, palette: dict[str, str]) -> None:
         """Apply the card palette and update the mini clock styling."""
@@ -103,9 +105,13 @@ class WorldClockCard(tk.Frame):
                 "frame": palette["clock_border"],
                 "face": palette["clock_face"],
                 "inner_ring": palette["card_background"],
+                "day_face": palette["clock_day_face"],
+                "night_face": palette["clock_night_face"],
                 "numeral": palette["clock_numeral"],
-                "major_tick": palette["accent_primary"],
+                "major_tick": palette["clock_ring_primary"],
                 "minor_tick": palette["accent_secondary"],
+                "ring_primary": palette["clock_ring_primary"],
+                "ring_secondary": palette["clock_ring_secondary"],
                 "hour_hand": palette["clock_hour_hand"],
                 "minute_hand": palette["clock_minute_hand"],
                 "second_hand": palette["clock_second_hand"],
@@ -147,13 +153,14 @@ class WorldClocksPanel(tk.Frame):
         world_clock_service: WorldClockService,
         theme_period_service: ThemePeriodService,
     ) -> None:
-        super().__init__(master, bg="#bfd8ee", highlightthickness=0, bd=0, width=320)
+        super().__init__(master, bg="#bfd8ee", highlightthickness=0, bd=0, width=336)
         self._world_clock_service = world_clock_service
         self._theme_period_service = theme_period_service
         self._use_24_hour_format = True
         self._city_selector_variable = tk.StringVar()
         self._clock_cards: dict[str, WorldClockCard] = {}
         self._panel_theme_mode: str | None = None
+        self._style_object = ttk.Style()
         self.grid_propagate(False)
         self._build_layout()
 
@@ -168,8 +175,35 @@ class WorldClocksPanel(tk.Frame):
         )
         self._controls_shell.configure(bg=palette["world_panel_shell"])
         self._controls_body.configure(bg=palette["world_panel_background"])
+        self._selector_shell.configure(bg=palette["world_panel_shell"])
+        self._selector_body.configure(bg=palette["world_panel_background"])
+        self._list_frame.configure(bg=palette["world_panel_background"])
         self._scroll_canvas.configure(bg=palette["world_panel_background"])
         self._cards_container.configure(bg=palette["world_panel_background"])
+        self._add_button.configure(
+            bg=palette["toggle_active_fill"],
+            fg=palette["toggle_active_text"],
+            activebackground=palette["toggle_active_fill"],
+            activeforeground=palette["toggle_active_text"],
+        )
+        self._style_object.configure(
+            "Cronos.TCombobox",
+            fieldbackground=palette["world_panel_background"],
+            background=palette["world_panel_background"],
+            foreground=palette["title"],
+            arrowcolor=palette["subtitle"],
+            borderwidth=0,
+            relief="flat",
+            selectforeground=palette["title"],
+            selectbackground=palette["world_panel_background"],
+        )
+        self._scroll_bar.configure(
+            bg=palette["world_panel_shell"],
+            troughcolor=palette["hero_stage"],
+            activebackground=palette["toggle_active_fill"],
+            highlightthickness=0,
+            bd=0,
+        )
 
     def set_use_24_hour_format(self, use_24_hour_format: bool) -> None:
         """Update the digital format used by all world clocks."""
@@ -211,7 +245,7 @@ class WorldClocksPanel(tk.Frame):
             )
 
     def _build_layout(self) -> None:
-        self._panel_shell = tk.Frame(self, bg="#bfd8ee", padx=2, pady=2)
+        self._panel_shell = tk.Frame(self, bg="#bfd8ee", padx=1, pady=1)
         self._panel_shell.pack(fill="both", expand=True)
 
         self._panel_body = tk.Frame(self._panel_shell, bg="#fffdf8")
@@ -220,14 +254,14 @@ class WorldClocksPanel(tk.Frame):
         self._title_label = tk.Label(
             self._panel_body,
             text="Relojes mundiales",
-            font=("Georgia", 17, "bold"),
+            font=("Georgia", 18, "bold"),
             fg="#155e75",
             bg="#fffdf8",
         )
-        self._title_label.pack(anchor="w", padx=16, pady=(16, 10))
+        self._title_label.pack(anchor="w", padx=18, pady=(20, 12))
 
-        self._controls_shell = tk.Frame(self._panel_body, bg="#bfd8ee", padx=2, pady=2)
-        self._controls_shell.pack(fill="x", padx=14, pady=(0, 10))
+        self._controls_shell = tk.Frame(self._panel_body, bg="#bfd8ee", padx=1, pady=1)
+        self._controls_shell.pack(fill="x", padx=16, pady=(0, 12))
 
         self._controls_body = tk.Frame(self._controls_shell, bg="#fffdf8")
         self._controls_body.pack(fill="x")
@@ -239,8 +273,7 @@ class WorldClocksPanel(tk.Frame):
         if available_city_names:
             self._city_selector_variable.set(available_city_names[0])
 
-        style_object = ttk.Style()
-        style_object.configure(
+        self._style_object.configure(
             "Cronos.TCombobox",
             fieldbackground="#ffffff",
             background="#ffffff",
@@ -250,17 +283,25 @@ class WorldClocksPanel(tk.Frame):
             relief="flat",
         )
 
-        city_selector = ttk.Combobox(
-            self._controls_body,
+        self._selector_shell = tk.Frame(self._controls_body, bg="#bfd8ee", padx=1, pady=1)
+        self._selector_shell.grid(row=0, column=0, sticky="ew", padx=12, pady=(12, 8))
+        self._selector_shell.columnconfigure(0, weight=1)
+
+        self._selector_body = tk.Frame(self._selector_shell, bg="#fffdf8")
+        self._selector_body.grid(row=0, column=0, sticky="ew")
+        self._selector_body.columnconfigure(0, weight=1)
+
+        self._city_selector = ttk.Combobox(
+            self._selector_body,
             textvariable=self._city_selector_variable,
             values=available_city_names,
             state="readonly",
-            width=20,
+            width=22,
             style="Cronos.TCombobox",
         )
-        city_selector.grid(row=0, column=0, sticky="ew", padx=12, pady=(12, 8))
+        self._city_selector.grid(row=0, column=0, sticky="ew", padx=10, pady=10)
 
-        add_button = tk.Button(
+        self._add_button = tk.Button(
             self._controls_body,
             text="Agregar reloj",
             command=self._add_selected_city,
@@ -275,28 +316,29 @@ class WorldClocksPanel(tk.Frame):
             pady=9,
             cursor="hand2",
         )
-        add_button.grid(row=1, column=0, sticky="ew", padx=12, pady=(0, 12))
+        self._add_button.grid(row=1, column=0, sticky="ew", padx=12, pady=(0, 12))
 
-        list_frame = tk.Frame(self._panel_body, bg="#fffdf8")
-        list_frame.pack(fill="both", expand=True, padx=12, pady=(0, 12))
-        list_frame.columnconfigure(0, weight=1)
-        list_frame.rowconfigure(0, weight=1)
+        self._list_frame = tk.Frame(self._panel_body, bg="#fffdf8")
+        self._list_frame.pack(fill="both", expand=True, padx=14, pady=(0, 14))
+        self._list_frame.columnconfigure(0, weight=1)
+        self._list_frame.rowconfigure(0, weight=1)
 
         self._scroll_canvas = tk.Canvas(
-            list_frame,
+            self._list_frame,
             bg="#fffdf8",
             highlightthickness=0,
             bd=0,
         )
         self._scroll_canvas.grid(row=0, column=0, sticky="nsew")
 
-        scroll_bar = tk.Scrollbar(
-            list_frame,
+        self._scroll_bar = tk.Scrollbar(
+            self._list_frame,
             orient="vertical",
             command=self._scroll_canvas.yview,
+            width=10,
         )
-        scroll_bar.grid(row=0, column=1, sticky="ns")
-        self._scroll_canvas.configure(yscrollcommand=scroll_bar.set)
+        self._scroll_bar.grid(row=0, column=1, sticky="ns", padx=(8, 0))
+        self._scroll_canvas.configure(yscrollcommand=self._scroll_bar.set)
 
         self._cards_container = tk.Frame(self._scroll_canvas, bg="#fffdf8")
         self._cards_window = self._scroll_canvas.create_window(
@@ -320,7 +362,7 @@ class WorldClocksPanel(tk.Frame):
             city_name=city_name,
             remove_action=self._remove_city,
         )
-        clock_card.pack(fill="x", pady=8)
+        clock_card.pack(fill="x", pady=6)
         self._clock_cards[city_name] = clock_card
         self.refresh_world_clocks()
 
