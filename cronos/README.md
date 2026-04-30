@@ -33,7 +33,7 @@ From the `cronos` directory:
 python main.py
 ```
 
-This opens the base desktop window with navigation and placeholder views for the local clock, stopwatch, and history sections.
+This opens Cronos directly into the focused clock interface with the real local analog clock, world clocks, dynamic background, and digital 12-hour / 24-hour formatting toggle.
 
 ## How to run the tests
 
@@ -43,4 +43,4 @@ From the `cronos` directory:
 python -m pytest
 ```
 
-The test suite validates the circular doubly linked list behavior.
+The test suite validates the circular doubly linked list behavior and the active clock services.

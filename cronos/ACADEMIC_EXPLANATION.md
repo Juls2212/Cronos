@@ -44,12 +44,10 @@ This keeps the structure academically defensible while still allowing straightfo
 
 ## Intended future use in Cronos
 
-The base linked structure is designed to support future services such as:
+The base linked structure is designed to support the active clock services such as:
 
 - `LocalTimeClockService`
 - `WorldClockService`
-- `StopwatchService`
 - `ThemePeriodService`
-- `HistoryRecordingService`
 
-These services will later connect the academic structure to the visual Tkinter clock application.
+These services connect the academic structure to the visual Tkinter clock application.
